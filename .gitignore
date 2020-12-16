@@ -23,6 +23,7 @@ shared/*
 playlists/*
 pythonenv*/*
 logs/*
+.spyproject/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
