@@ -45,6 +45,7 @@ $lang['globalIdleShutdown'] = "Idle Shutdown";
 $lang['globalAutoStopPlayout'] = "Stop Playout Timer";
 $lang['globalStopTimer'] = "Stop Playout Timer";
 $lang['globalSleepTimer'] = "Shutdown Timer";
+$lang['globalShutdownVolumeReduction'] = "Shutdown Timer Volume Reduction";
 $lang['globalExternalInterfaces'] = "External Devices & Interfaces";
 $lang['globalIdleTime'] = "Idle Time";
 $lang['globalNotIdle'] = "Not Idle";
@@ -68,6 +69,7 @@ $lang['globalLang'] = "Language";
 $lang['globalLanguageSettings'] = "Language Settings";
 $lang['globalPriority'] = "Priority";
 $lang['globalEmail'] = "Email address";
+$lang['globalAudioSink'] = "Audio Devices";
 
 // Player title HTML
 $lang['playerSeekBack'] = "seek back";
@@ -125,6 +127,7 @@ $lang['cardRegisterErrorStreamOrAudio'] = "<p>Seems you haven't selected anythin
 $lang['cardRegisterErrorExistingAndNew'] = "<p>This is too much! Either choose an existing folder or create a new one.</p>";
 $lang['cardRegisterErrorExistingFolder'] = "<p>A folder named with the same name already exists! Chose a different one.</p>";
 $lang['cardRegisterErrorSuggestFolder'] = "A folder name for the stream needs to be created. Below in the form I made a suggestion.";
+$lang['cardRegisterErrorConvertSpotifyURL'] = "Wrong spotify url, converted to the correct format";
 $lang['cardRegisterStream2Card'] = "Stream is linked to Card ID.";
 $lang['cardRegisterFolder2Card'] = "Audio folder is now linked to Card.";
 $lang['cardRegisterDownloadingYT'] = "<p>YouTube audio is downloading. This may take a couple of minutes. You may check the logfile \"youtube-dl.log\" in the shared folder.</p>";
@@ -205,6 +208,12 @@ $lang['trackEditDeleteYes'] = "Yes, DELETE this track";
 /*
 * Settings
 */
+$lang['settingsPlayoutBehaviourCard'] = "General RFID player control";
+$lang['settingsPlayoutBehaviourCardLabel'] = "Swipe or place the card?";
+$lang['settingsPlayoutBehaviourCardSwipe'] = "Swiping starts the player.";
+$lang['settingsPlayoutBehaviourCardPlace'] = "Placing the card starts player, removal stops it.";
+$lang['settingsPlayoutBehaviourCardHelp'] = "If you chose 'Place card', this affects the 'Second Swipe' options which can be selected below.";
+
 $lang['settingsVolChangePercent'] = "Vol. Change %";
 $lang['settingsMaxVol'] = "Maximum Volume";
 $lang['settingsStartupVol'] = "Startup Volume";
@@ -259,6 +268,8 @@ $lang['infoMPDStatus'] = "MPD Server Status";
 $lang['infoDebugLogTail'] = "<b>DEBUG log file</b>: Last 40 lines";
 $lang['infoDebugLogClear'] = "Clear all content from debug.log";
 $lang['infoDebugLogSettings'] = "Debug Log Settings";
+$lang['infoAudioActive'] = "Enabled Audio Devices";
+$lang['infoBluetoothStatus'] = "Bluetooth Status";
 
 /*
 * Folder Management and File Upload
