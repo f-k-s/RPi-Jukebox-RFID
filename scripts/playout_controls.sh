@@ -67,6 +67,7 @@ NOW=`date +%Y-%m-%d.%H:%M:%S`
 # recordstop
 # recordplaylatest
 # readwifiipoverspeaker
+# toggleap
 
 # The absolute path to the folder whjch contains all the scripts.
 # Unless you are working with symlinks, leave the following line untouched.
@@ -93,6 +94,17 @@ fi
 # this file does not need to exist
 # it will be created or deleted by this script
 VOLFILE=${PATHDATA}/../settings/Audio_Volume_Level
+
+#################################
+# path to file storing the current access point status  ----DEPRECATED-----
+# this file does not need to exist
+# it will be created or deleted by this script
+APSTATFILE=${PATHDATA}/../settings/Access_Point_Status
+# this file contains the line to configure the dhcp server. the content will be appended to dhcpcd.conf (after creating a backup)
+APCONFFILE=${PATHDATA}/../settings/Access_Point_Conf.txt
+
+
+MUTEPIN=16
 
 #############################################################
 
@@ -649,8 +661,8 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
-
-	      mpc play 1
+        raspi-gpio set $MUTEPIN op dh
+        mpc play 1
         ;;
     playerpause)
         # toggle current track
@@ -667,13 +679,14 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
+        raspi-gpio set $MUTEPIN op dh
         mpc toggle
         ;;
     playerpauseforce)
         # pause current track with optional delay
         if [ -n ${VALUE} ];
         then
-	       /bin/sleep $VALUE
+           /bin/sleep $VALUE
         fi
         mpc pause
         ;;
@@ -698,7 +711,8 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
-
+        raspi-gpio set $MUTEPIN op dh
+        
         # No checking for resume if the audio is paused, just unpause it
         PLAYSTATE=$(echo -e "status\nclose" | nc -w 1 localhost 6600 | grep -o -P '(?<=state: ).*')
         if [ "$PLAYSTATE" == "pause" ]
@@ -779,6 +793,7 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
+        raspi-gpio set $MUTEPIN op dh
         mpc seek 0
         ;;
     playerrepeat)
@@ -818,6 +833,7 @@ case $COMMAND in
         # this command clears the playlist, loads a new playlist and plays it. It also handles the resume play feature.
         # FOLDER = rel path from audiofolders
         # VALUE = name of playlist
+        raspi-gpio set $MUTEPIN op dh
         if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   playlistaddplay playlist name VALUE: $VALUE" >> ${PATHDATA}/../logs/debug.log; fi
         if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   playlistaddplay FOLDER: $FOLDER" >> ${PATHDATA}/../logs/debug.log; fi
 
@@ -888,6 +904,7 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
+        raspi-gpio set $MUTEPIN op dh
         mpc play
         ;;
      playlistreset)
@@ -895,6 +912,7 @@ case $COMMAND in
         then
            echo "" > $PATHDATA/../shared/audiofolders/$FOLDERPATH/lastplayed.dat
         fi
+        raspi-gpio set $MUTEPIN op dh
         mpc play 1
         ;;
     playsinglefile)
@@ -911,6 +929,7 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
+        raspi-gpio set $MUTEPIN op dh
         mpc play
         ;;
     setidletime)
@@ -928,12 +947,14 @@ case $COMMAND in
     enablewifi)
         if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   ${COMMAND}" >> ${PATHDATA}/../logs/debug.log; fi
         rfkill unblock wifi
+        sudo systemctl kill -s SIGUSR1 ledBtnCtrl.service
         ;;
     disablewifi)
         if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   ${COMMAND}" >> ${PATHDATA}/../logs/debug.log; fi
         # see https://forum-raspberrypi.de/forum/thread/25696-bluetooth-und-wlan-deaktivieren/#pid226072 seems to disable wifi,
         # as good as it gets
         rfkill block wifi
+        sudo systemctl kill -s SIGUSR2 ledBtnCtrl.service
         ;;
     togglewifi)
         if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   ${COMMAND}" >> ${PATHDATA}/../logs/debug.log; fi
@@ -941,29 +962,32 @@ case $COMMAND in
         # Build special for franzformator
         rfkill list wifi | grep -i "Soft blocked: no" > /dev/null 2>&1
         WIFI_SOFTBLOCK_RESULT=$?
-        wpa_cli -i wlan0 status | grep 'ip_address' > /dev/null 2>&1
-        WIFI_IP_RESULT=$?
-        if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   WIFI_IP_RESULT='${WIFI_IP_RESULT}' WIFI_SOFTBLOCK_RESULT='${WIFI_SOFTBLOCK_RESULT}'" >> ${PATHDATA}/../logs/debug.log; fi
-        if [ $WIFI_SOFTBLOCK_RESULT -eq 0 ] && [ $WIFI_IP_RESULT -eq 0 ]
+        # wpa_cli -i wlan0 status | grep 'ip_address' > /dev/null 2>&1
+        # WIFI_IP_RESULT=$?
+        # if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   WIFI_IP_RESULT='${WIFI_IP_RESULT}' WIFI_SOFTBLOCK_RESULT='${WIFI_SOFTBLOCK_RESULT}'" >> ${PATHDATA}/../logs/debug.log; fi
+        if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   WIFI_SOFTBLOCK_RESULT='${WIFI_SOFTBLOCK_RESULT}'" >> ${PATHDATA}/../logs/debug.log; fi
+        if [ $WIFI_SOFTBLOCK_RESULT -eq 0 ] #&& [ $WIFI_IP_RESULT -eq 0 ]
         then
             if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   Wifi will now be deactivated" >> ${PATHDATA}/../logs/debug.log; fi
             echo "Wifi will now be deactivated"
             rfkill block wifi
+            sudo systemctl kill -s SIGUSR2 ledBtnCtrl.service
         else
             if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "   Wifi will now be activated" >> ${PATHDATA}/../logs/debug.log; fi
             echo "Wifi will now be activated"
             rfkill unblock wifi
+            sudo systemctl kill -s SIGUSR1 ledBtnCtrl.service
         fi
         ;;
     recordstart)
         #mkdir $AUDIOFOLDERSPATH/Recordings
         #kill the potential current playback
-        sudo pkill aplay
+        sudo pkill mpg123 # aplay
         #start recorder if not already started
         if ! pgrep -x "arecord" > /dev/null
         then
             echo "start recorder"
-            arecord -D plughw:1 --duration=${VALUE} -f cd -vv $AUDIOFOLDERSPATH/Recordings/$(date +"%Y-%m-%d_%H-%M-%S").wav &
+            arecord -D plughw:1 --duration=${VALUE} -f cd | lame -r -m s -a -b 96 - $AUDIOFOLDERSPATH/Recordings/$(date +"%Y-%m-%d_%H-%M-%S").mp3 &
         else
             echo "device is already recording"
         fi
@@ -972,10 +996,10 @@ case $COMMAND in
         #kill arecord instances
         sudo pkill arecord
         ;;
-        recordplaylatest)
+     recordplaylatest)
         #kill arecord and aplay instances
         sudo pkill arecord
-        sudo pkill aplay
+        sudo pkill mpg123 # aplay
         # Unmute if muted
         if [ -f $VOLFILE ]; then
             # $VOLFILE DOES exist == audio off
@@ -984,7 +1008,7 @@ case $COMMAND in
             # delete $VOLFILE
             rm -f $VOLFILE
         fi
-        aplay `ls $AUDIOFOLDERSPATH/Recordings/*.wav -1t|head -1`
+        mpg123 `ls $AUDIOFOLDERSPATH/Recordings/*.mp3 -1t|head -1`
         ;;
     readwifiipoverspeaker)
         # will read out the IP address over the Pi's speaker.
@@ -992,8 +1016,52 @@ case $COMMAND in
         cd /home/pi/RPi-Jukebox-RFID/misc/
         # delete older mp3 (in case process was interrupted)
         sudo rm WifiIp.mp3
+        # raspi-gpio set $MUTEPIN op dh # WE NEED TO LOWER THE VOLUME FIRST! WiFi.mp3 is much too LOUD!
         /usr/bin/php /home/pi/RPi-Jukebox-RFID/scripts/helperscripts/cli_ReadWifiIp.php
         ;;
+    toggleap)
+        # toggle access point
+        if systemctl is-active --quiet wpa_supplicant@ap0.service; then
+            # was on -> turn off
+            sudo systemctl start wpa_supplicant@wlan0.service
+            sudo systemctl kill -s SIGUSR2 ledBtnCtrl.service
+            sudo systemctl enable wpa_supplicant@wlan0.service
+            sudo systemctl disable wpa_supplicant@ap0.service
+        else
+            # was off -> turn on
+            sudo systemctl start wpa_supplicant@ap0.service
+            sudo systemctl kill -s SIGUSR1 ledBtnCtrl.service
+            sudo systemctl enable wpa_supplicant@ap0.service
+            sudo systemctl disable wpa_supplicant@wlan0.service
+        fi
+        # ----- old solution did not work: ---------
+        # if [ -f $APSTATFILE ]; then
+            # apstatus=$(cat $APSTATFILE)
+        # else # file not exists, assume AP was off
+            # apstatus="0"
+        # fi
+        # if [ "$apstatus" == "0" ]; then #        do we need quotes for the var here?
+            # # was off -> turn on
+            # apstatus="1"
+            # sudo cp /etc/dhcpcd.conf /etc/dhcpcd.conf.bku
+            # sudo cat $APCONFFILE >> /etc/dhcpcd.conf
+            # sudo systemctl enable dhcpcd.service
+            # # TODO: modify  /etc/network/interfaces ?
+            # sudo systemctl kill -s SIGUSR1 ledBtnCtrl.service
+            # #https://serverfault.com/a/936039
+        # else
+            # # was on -> turn off
+            # apstatus="0"
+            # sudo cp /etc/dhcpcd.conf.bku /etc/dhcpcd.conf
+            # sudo systemctl disable dhcpcd.service # not neccessary, starting service will fail, because static ip defined in /etc/network/interfaces
+            # # TODO: modify  /etc/network/interfaces ?
+            # sudo systemctl kill -s SIGUSR2 ledBtnCtrl.service
+        # fi
+        # echo $apstatus > $APSTATFILE
+        # # REBOOT REQUIRED! or see https://raspberrypi.stackexchange.com/questions/93311/switch-between-wifi-client-and-access-point-without-reboot
+        
+        ;;
+        
     *)
         echo Unknown COMMAND $COMMAND VALUE $VALUE
         if [ "${DEBUG_playout_controls_sh}" == "TRUE" ]; then echo "Unknown COMMAND ${COMMAND} VALUE ${VALUE}" >> ${PATHDATA}/../logs/debug.log; fi
