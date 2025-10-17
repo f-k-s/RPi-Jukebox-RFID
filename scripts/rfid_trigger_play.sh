@@ -80,7 +80,7 @@ if [ "$CARDID" ]; then
     # Special uses are for example volume changes, skipping, muting sound.
 
     case $CARDID in
-	    $CMDSHUFFLE)
+        $CMDSHUFFLE)
             # toggles shuffle mode  (random on/off)
             $PATHDATA/playout_controls.sh -c=playershuffle
             ;;
@@ -271,6 +271,9 @@ if [ "$CARDID" ]; then
         $CMDREADWIFIIP)
             $PATHDATA/playout_controls.sh -c=readwifiipoverspeaker
             ;;
+        $TOGGLEAP)
+            $PATHDATA/playout_controls.sh -c=toggleap
+            ;;
         *)
 
             # We checked if the card was a special command, seems it wasn't.
@@ -456,9 +459,9 @@ if [ ! -z "$FOLDER" -a ! -z ${FOLDER+x} -a -d "${AUDIOFOLDERSPATH}/${FOLDER}" ];
         if [ "${DEBUG_rfid_trigger_play_sh}" == "TRUE" ]; then echo "  VAR FOLDER: $FOLDER"   >> $PATHDATA/../logs/debug.log; fi
         if [ "${DEBUG_rfid_trigger_play_sh}" == "TRUE" ]; then echo "  VAR PLAYLISTPATH: $PLAYLISTPATH"   >> $PATHDATA/../logs/debug.log; fi
 
-		# save position of current playing list "stop"
-		$PATHDATA/playout_controls.sh -c=playerstop
-		# play playlist
+        # save position of current playing list "stop"
+        $PATHDATA/playout_controls.sh -c=playerstop
+        # play playlist
         # the variable passed on to play is the playlist name -v (NOT the folder name)
         # because (see above) a folder can be played recursively (including subfolders) or flat (only containing files)
         # load new playlist and play

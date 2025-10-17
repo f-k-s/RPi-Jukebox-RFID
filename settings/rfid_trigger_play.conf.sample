@@ -125,6 +125,8 @@ DISABLEWIFI="%DISABLEWIFI%"
 TOGGLEWIFI="%TOGGLEWIFI%"
 ### Read out the Wifi IP over the Phoniebox speakers
 CMDREADWIFIIP="%CMDREADWIFIIP%"
+### Toggle AccessPoint on/off
+TOGGLEAP="%TOGGLEAP%"
 
 ## Recording audio commands 
 ### Start recording for 10 sec. duration

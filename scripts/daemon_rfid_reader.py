@@ -72,6 +72,7 @@ while True:
         if cardid is not None:
             if cardid != previous_id or (time.time() - previous_time) >= float(same_id_delay) or cardid in str(ids):
                 logger.info('Trigger Play Cardid={cardid}'.format(cardid=cardid))
+                subprocess.call("sudo systemctl kill -s SIGUSR1 ledBtnCtrl.service", shell=True)
                 subprocess.call([dir_path + '/rfid_trigger_play.sh --cardid=' + cardid], shell=True)
                 previous_id = cardid
 

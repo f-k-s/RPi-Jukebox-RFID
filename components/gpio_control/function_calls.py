@@ -1,5 +1,6 @@
 import logging
 import sys
+from time import sleep
 from subprocess import Popen as function_call
 
 logger = logging.getLogger(__name__)
@@ -8,6 +9,8 @@ playout_control = "../../scripts/playout_controls.sh"
 
 
 def functionCallShutdown(*args):
+    print('PB: shutdown initiated!')
+    sleep(2)
     function_call("{command} -c=shutdown".format(command=playout_control), shell=True)
 
 
