@@ -987,7 +987,13 @@ case $COMMAND in
         if ! pgrep -x "arecord" > /dev/null
         then
             echo "start recorder"
-            arecord -D plughw:1 --duration=${VALUE} -f cd | lame -r -m s -a -b 96 - $AUDIOFOLDERSPATH/Recordings/$(date +"%Y-%m-%d_%H-%M-%S").mp3 &
+            # $(date +"%Y-%m-%d_%H-%M-%S").mp3
+            if [ -z "$VALUE" ]; then
+                OUTPUT_FILE=$AUDIOFOLDERSPATH/Recordings/$(date +"%Y-%m-%d_%H-%M-%S").mp3
+            else
+                OUTPUT_FILE=$VALUE
+            fi
+            arecord -D plughw:1 --duration=60 -f cd | lame -r -m s -a -b 96 - ${OUTPUT_FILE} &
         else
             echo "device is already recording"
         fi
